@@ -1,0 +1,20 @@
+# --- brains / providers ---
+groq
+google-genai
+ollama
+
+# --- memory (pgvector + embeddings) ---
+psycopg[binary]
+pgvector
+sentence-transformers
+
+# --- desktop UI ---
+pywebview
+
+# --- app control ---
+spotipy          # tier 1: Spotify Web API
+# playwright     # tier 2: drive real Chrome (added in the next slice)
+
+# --- misc ---
+python-dotenv
+httpx
