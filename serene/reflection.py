@@ -12,9 +12,10 @@ import json
 from datetime import date
 
 from serene.providers.groq import GroqProvider
+from serene.config import REFLECTION_MODEL
 from serene.memory.store import save_fact, save_episode, decay
 
-_extractor = GroqProvider()
+_extractor = GroqProvider(REFLECTION_MODEL)
 
 _EXTRACTION_PROMPT = """You are SERENE's memory system. Read the conversation \
 between the user and SERENE, and extract what is worth remembering long-term \

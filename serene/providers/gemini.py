@@ -1,5 +1,5 @@
 from google import genai
-from serene.config import GEMINI_API_KEY
+from serene.config import GEMINI_API_KEY, GEMINI_MODEL
 
 def _to_gemini_format(messages):
     system = ""
@@ -14,7 +14,7 @@ def _to_gemini_format(messages):
     return system, history
 
 class GeminiProvider:
-    def __init__(self,model = "gemini-3.5-flash"):
+    def __init__(self, model=GEMINI_MODEL):
         self.model = model
         self.client = genai.Client(api_key = GEMINI_API_KEY)
     def chat(self,messages):

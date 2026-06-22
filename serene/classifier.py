@@ -12,10 +12,10 @@ back to CHAT (safer: don't reach for tools unless we're fairly sure).
 """
 from groq import Groq
 
-from serene.config import GROQ_API_KEY
+from serene.config import GROQ_API_KEY, CLASSIFIER_MODEL
 
 _client = Groq(api_key=GROQ_API_KEY)
-_MODEL = "llama-3.1-8b-instant"
+_MODEL = CLASSIFIER_MODEL
 
 _PROMPT = """Classify the LAST user message as ACTION or CHAT. Use the recent
 conversation ONLY to resolve references like "it" or "that file".

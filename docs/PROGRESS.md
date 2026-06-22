@@ -324,6 +324,15 @@ Her BRAIN runs on the PC; the phone is a chat client (Option A).
   to the phone. Tools still run on the PC (so you can drive the PC from the phone).
 - Needs Postgres + Ollama running on the PC, same as the desktop app.
 
+## Config-driven models ✅
+
+All model names moved out of source into `.env` (read via `config.py`), so
+swapping a model needs only an `.env` edit + restart — no rebuild.
+`GEMINI_MODEL` (default `gemini-3.5-flash`), `GROQ_MODEL`, `LOCAL_MODEL`,
+`AGENT_MODEL`, `CLASSIFIER_MODEL`, `REFLECTION_MODEL`. Providers/agent/classifier/
+reflection now read their model from config defaults. Required one final rebuild
+to bake in the config-driven loading; future model changes do not.
+
 ## Environment notes
 - Python **3.14.5**, venv at `E:\jarvis\.venv`.
 - Playwright **1.60.0**. Uses installed Chrome via `channel="chrome"` — no
