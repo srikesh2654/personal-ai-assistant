@@ -16,4 +16,4 @@ build/
 icon_preview.png
 exe_icon_check.png
 @AutomationLog.txt
-serene_run.log
+*.log
