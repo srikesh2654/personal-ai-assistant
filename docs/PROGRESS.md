@@ -307,6 +307,23 @@ spinning rings, type into the center) — not a plain form.
 - Honest scope: a deterrent (gates the GUI), NOT real security — the DB and
   `.env` are still unencrypted on disk.
 
+## Phone access — FastAPI server + PWA ✅
+
+Her BRAIN runs on the PC; the phone is a chat client (Option A).
+- `serene/server.py` — FastAPI wrapping the existing `Session`/router/memory.
+  Endpoints: `/api/config` (public), `/api/unlock` (password → bearer token),
+  `/api/state`, `/api/send`, `/api/switch`, `/api/memory`, `/api/end`. Serves the
+  PWA from `serene/web_app/` at `/`. Run: `python -m serene.server` (port 8765,
+  binds 0.0.0.0). `start_phone_server.bat` is a double-click launcher.
+- `serene/web_app/` — installable PWA: `index.html` (mobile chat + reactor lock,
+  uses `fetch`), `manifest.json`, `sw.js`, gradient-S `icon-192/512.png`.
+- Auth reuses `SERENE_PASSWORD_HASH`; token stored in phone localStorage.
+- Phone (same Wi-Fi) → `http://<pc-ip>:8765` (PC was 192.168.1.42). Outside home:
+  Tailscale. Windows Firewall must allow Python on the private network.
+- Confirmations auto-approve on the server (no GUI dialog) — TODO: route confirms
+  to the phone. Tools still run on the PC (so you can drive the PC from the phone).
+- Needs Postgres + Ollama running on the PC, same as the desktop app.
+
 ## Environment notes
 - Python **3.14.5**, venv at `E:\jarvis\.venv`.
 - Playwright **1.60.0**. Uses installed Chrome via `channel="chrome"` — no

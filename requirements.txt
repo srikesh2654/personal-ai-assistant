@@ -15,6 +15,10 @@ pywebview
 spotipy          # tier 1: Spotify Web API
 # playwright     # tier 2: drive real Chrome (added in the next slice)
 
+# --- phone server (FastAPI brain + PWA client) ---
+fastapi
+uvicorn[standard]
+
 # --- misc ---
 python-dotenv
 httpx

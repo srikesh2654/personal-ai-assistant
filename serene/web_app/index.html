@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#070b12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>SERENE</title>
+<style>
+  :root{
+    --bg:#070b12; --bg2:#0d1420; --panel:rgba(18,28,44,.55); --line:rgba(80,200,255,.14);
+    --accent:#22d3ee; --accent-soft:rgba(34,211,238,.15); --accent-glow:rgba(34,211,238,.45);
+    --violet:#7c3aed; --text:#dbe7f3; --text-dim:#6b8299; --user:#123042;
+    --font:"Segoe UI",system-ui,sans-serif; --mono:"Consolas",monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;font-family:var(--font);color:var(--text);overflow:hidden;
+    background:radial-gradient(900px 500px at 80% -10%,rgba(34,211,238,.10),transparent 60%),
+      radial-gradient(700px 460px at -10% 110%,rgba(124,58,237,.12),transparent 55%),
+      linear-gradient(160deg,var(--bg),var(--bg2));}
+  .app{display:flex;flex-direction:column;height:100dvh;}
+  .bar{display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;
+    border-bottom:1px solid var(--line);}
+  .orb{width:12px;height:12px;border-radius:50%;
+    background:radial-gradient(circle at 30% 30%,#aef6ff,var(--accent));
+    box-shadow:0 0 10px var(--accent-glow);}
+  .brand{font-family:var(--mono);letter-spacing:5px;font-size:14px;color:#eafdff;flex:1;}
+  select,.membtn{background:var(--panel);color:var(--accent);border:1px solid var(--line);
+    border-radius:8px;font-family:var(--mono);font-size:11px;padding:7px 9px;outline:none;}
+  .membtn{font-size:15px;line-height:1;}
+  .membtn.off{color:#ff8a8a;opacity:.7;}
+  .chat{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;}
+  .msg{max-width:84%;padding:11px 14px;line-height:1.5;font-size:15px;border-radius:14px;
+    white-space:pre-wrap;word-wrap:break-word;animation:rise .25s ease both;}
+  @keyframes rise{from{opacity:0;transform:translateY(6px);}to{opacity:1;}}
+  .msg.user{align-self:flex-end;background:linear-gradient(180deg,#15384c,var(--user));
+    border:1px solid rgba(34,211,238,.25);border-bottom-right-radius:4px;}
+  .msg.serene{align-self:flex-start;background:var(--panel);border:1px solid var(--line);
+    border-left:2px solid var(--accent);border-bottom-left-radius:4px;}
+  .composer{display:flex;gap:9px;padding:10px 12px calc(env(safe-area-inset-bottom) + 12px);
+    border-top:1px solid var(--line);}
+  textarea{flex:1;resize:none;max-height:120px;background:var(--panel);color:var(--text);
+    border:1px solid var(--line);border-radius:12px;padding:12px;font-family:var(--font);
+    font-size:16px;outline:none;}
+  .send{padding:0 18px;font-family:var(--mono);font-size:12px;letter-spacing:1px;color:#06121a;
+    font-weight:700;background:linear-gradient(180deg,#6ff0ff,var(--accent));border:none;
+    border-radius:12px;box-shadow:0 0 16px var(--accent-glow);}
+  .send:disabled{opacity:.4;box-shadow:none;}
+  #lock{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(700px 460px at 50% 42%,rgba(34,211,238,.07),transparent 60%),
+      linear-gradient(160deg,var(--bg),var(--bg2));transition:opacity .5s;}
+  #lock.hidden{opacity:0;pointer-events:none;}
+  .reactor{position:relative;width:230px;height:230px;display:grid;place-items:center;}
+  .reactor svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;filter:drop-shadow(0 0 8px var(--accent-glow));}
+  .sp1{transform-origin:120px 120px;animation:spin 16s linear infinite;}
+  .sp2{transform-origin:120px 120px;animation:spin 9s linear infinite reverse;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .core{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:8px;}
+  #pw{width:140px;background:transparent;border:none;border-bottom:1px solid var(--line);
+    outline:none;color:var(--accent);caret-color:var(--accent);position:relative;z-index:3;
+    font-family:var(--mono);font-size:24px;letter-spacing:9px;text-align:center;padding:10px 6px;}
+  .hint{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--text-dim);}
+  #lock.error .reactor{animation:shake .42s;}
+  #lock.error #pw{color:#ff8a8a;}
+  @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px);}75%{transform:translateX(8px);}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="bar">
+    <div class="orb"></div><div class="brand">SERENE</div>
+    <select id="brain"></select>
+    <button class="membtn" id="mem" title="memory">&#129504;</button>
+  </div>
+  <div class="chat" id="chat"></div>
+  <div class="composer">
+    <textarea id="input" rows="1" placeholder="Talk to SERENE…"></textarea>
+    <button class="send" id="send">SEND</button>
+  </div>
+</div>
+
+<div id="lock">
+  <div class="reactor">
+    <svg viewBox="0 0 240 240">
+      <circle class="sp1" cx="120" cy="120" r="110" fill="none" stroke="#7c3aed" stroke-width="1.3" stroke-dasharray="3 7" opacity="0.8"/>
+      <circle cx="120" cy="120" r="88" fill="rgba(14,26,38,.55)" stroke="#22d3ee" stroke-width="1.6"/>
+      <circle class="sp2" cx="120" cy="120" r="88" fill="none" stroke="#22d3ee" stroke-width="3" stroke-dasharray="52 250"/>
+      <circle cx="120" cy="120" r="64" fill="rgba(7,11,18,.55)" stroke="rgba(34,211,238,.25)" stroke-width="1"/>
+    </svg>
+    <div class="core">
+      <span style="color:var(--accent)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11 V8 a4 4 0 0 1 8 0 v3"/></svg></span>
+      <input id="pw" type="password" inputmode="numeric" maxlength="12" placeholder="••••">
+      <div class="hint">ENTER TO UNLOCK</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const chat=document.getElementById('chat'), input=document.getElementById('input'),
+        sendBtn=document.getElementById('send'), brainSel=document.getElementById('brain'),
+        memBtn=document.getElementById('mem'), lock=document.getElementById('lock'),
+        pw=document.getElementById('pw');
+  let token=localStorage.getItem('serene_token')||'', memOn=true, started=false;
+
+  function addMsg(role,text){
+    const w=document.createElement('div'); w.className='msg '+(role==='user'?'user':'serene');
+    w.textContent=text; chat.appendChild(w); chat.scrollTop=chat.scrollHeight;
+  }
+  async function api(path,body){
+    const r=await fetch(path,{method:body?'POST':'GET',
+      headers:{'Content-Type':'application/json',...(token?{'Authorization':'Bearer '+token}:{})},
+      body:body?JSON.stringify(body):undefined});
+    if(r.status===401){ showLock(); throw new Error('locked'); }
+    return r.json();
+  }
+  function showLock(){ lock.classList.remove('hidden'); pw.value=''; pw.focus(); }
+  function hideLock(){ lock.classList.add('hidden'); input.focus(); }
+
+  async function send(){
+    const t=input.value.trim(); if(!t) return;
+    input.value=''; input.style.height='auto'; addMsg('user',t);
+    sendBtn.disabled=true; addMsg('serene','…'); const ph=chat.lastChild;
+    try{ const d=await api('/api/send',{message:t}); ph.textContent=d.reply; }
+    catch(e){ ph.textContent='[offline or locked]'; }
+    sendBtn.disabled=false; chat.scrollTop=chat.scrollHeight;
+  }
+  input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
+  input.addEventListener('input',()=>{input.style.height='auto';input.style.height=Math.min(input.scrollHeight,120)+'px';});
+  sendBtn.addEventListener('click',send);
+  brainSel.addEventListener('change',async()=>{const d=await api('/api/switch',{brain:brainSel.value});addMsg('serene','(brain: '+d.brain+')');});
+  memBtn.addEventListener('click',async()=>{const d=await api('/api/memory',{on:!memOn});memOn=d.memory_on;
+    memBtn.classList.toggle('off',!memOn);addMsg('serene',memOn?"(memory on)":"(memory off — not saved)");});
+
+  async function tryUnlock(){
+    const r=await fetch('/api/unlock',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw.value})});
+    const d=await r.json();
+    if(d.ok){ token=d.token; localStorage.setItem('serene_token',token); hideLock(); start(); }
+    else{ lock.classList.add('error'); pw.value=''; setTimeout(()=>lock.classList.remove('error'),460); }
+  }
+  pw.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();tryUnlock();}});
+  // tapping anywhere on the reactor focuses the field (mobile won't open the
+  // keyboard on programmatic focus — it needs this real tap gesture)
+  document.querySelector('.reactor').addEventListener('click',()=>pw.focus());
+
+  async function start(){
+    if(started) return; started=true;
+    const s=await api('/api/state');
+    brainSel.innerHTML=s.brains.map(b=>`<option ${b===s.brain?'selected':''}>${b.toUpperCase()}</option>`).join('');
+    memOn=s.memory_on; memBtn.classList.toggle('off',!memOn);
+    addMsg('serene',"Hi, I'm here. What can I do for you?");
+  }
+  (async()=>{
+    const c=await (await fetch('/api/config')).json();
+    if(!c.locked){ hideLock(); start(); }
+    else if(token){ try{ await start(); hideLock(); }catch(e){ showLock(); } }
+    else showLock();
+  })();
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
