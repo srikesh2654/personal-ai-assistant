@@ -1,0 +1,19 @@
+# --- secrets / local state (NEVER commit) ---
+.env
+.spotify_cache
+.chrome_profile/
+
+# --- python ---
+.venv/
+__pycache__/
+*.pyc
+
+# --- build output (huge; also contains a copy of .env) ---
+dist/
+build/
+
+# --- throwaway artifacts ---
+icon_preview.png
+exe_icon_check.png
+@AutomationLog.txt
+serene_run.log

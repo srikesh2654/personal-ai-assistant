@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SERENE</title>
+<style>
+  /* ---- theme ---- */
+  :root {
+    --bg: #070b12;
+    --bg2: #0d1420;
+    --panel: rgba(18, 28, 44, 0.55);
+    --line: rgba(80, 200, 255, 0.14);
+    --accent: #22d3ee;          /* cyan */
+    --accent-soft: rgba(34, 211, 238, 0.15);
+    --accent-glow: rgba(34, 211, 238, 0.45);
+    --text: #dbe7f3;
+    --text-dim: #6b8299;
+    --user: #123042;
+    --font: "Segoe UI", system-ui, sans-serif;
+    --mono: "Cascadia Code", "Consolas", monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    font-family: var(--font);
+    color: var(--text);
+    overflow: hidden;
+    user-select: none;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(34,211,238,0.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(80,120,255,0.10), transparent 55%),
+      linear-gradient(160deg, var(--bg), var(--bg2));
+  }
+
+  /* faint techy grid overlay */
+  body::before {
+    content: "";
+    position: fixed; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(80,200,255,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(80,200,255,0.035) 1px, transparent 1px);
+    background-size: 38px 38px;
+    mask-image: radial-gradient(circle at 50% 40%, #000 30%, transparent 90%);
+  }
+
+  .app { display: flex; flex-direction: column; height: 100%; }
+
+  /* ---- title bar ---- */
+  .titlebar {
+    display: flex; align-items: center; gap: 12px;
+    height: 52px; padding: 0 14px 0 18px;
+    border-bottom: 1px solid var(--line);
+    -webkit-app-region: no-drag;
+  }
+  .drag { flex: 1; height: 100%; display: flex; align-items: center; gap: 12px;
+          -webkit-user-select: none; }
+  .drag-region { /* pywebview drag handle */ }
+
+  .orb {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #aef6ff, var(--accent));
+    box-shadow: 0 0 10px var(--accent-glow), 0 0 22px var(--accent-glow);
+    animation: pulse 2.6s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { transform: scale(1); opacity: .9; }
+    50%     { transform: scale(1.25); opacity: 1; }
+  }
+
+  .brand {
+    font-family: var(--mono);
+    font-weight: 600; letter-spacing: 6px; font-size: 15px;
+    color: #eafdff;
+    text-shadow: 0 0 12px var(--accent-glow);
+  }
+  .status { font-family: var(--mono); font-size: 10px; letter-spacing: 2px;
+            color: var(--text-dim); }
+
+  .controls { display: flex; align-items: center; gap: 8px; }
+
+  select.brain {
+    -webkit-app-region: no-drag;
+    background: var(--panel); color: var(--accent);
+    border: 1px solid var(--line); border-radius: 8px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 1px;
+    padding: 7px 10px; outline: none; cursor: pointer;
+  }
+  select.brain:hover { border-color: var(--accent-glow); }
+
+  .winbtn {
+    width: 30px; height: 30px; border-radius: 8px; cursor: pointer;
+    background: transparent; border: 1px solid transparent; color: var(--text-dim);
+    font-size: 15px; display: grid; place-items: center; transition: .15s;
+  }
+  .winbtn:hover { color: var(--text); border-color: var(--line); background: var(--panel); }
+  .winbtn.x:hover { color: #ff8a8a; border-color: rgba(255,120,120,.35); }
+
+  .winbtn.mem { font-size: 14px; }
+  .winbtn.mem.on  { color: var(--accent); text-shadow: 0 0 8px var(--accent-glow); }
+  .winbtn.mem.off { color: #ff8a8a; opacity: .75; }
+  .winbtn.mem.off::after {
+    content: ""; position: absolute; width: 22px; height: 1.5px;
+    background: #ff8a8a; transform: rotate(-45deg);
+  }
+  .winbtn.mem { position: relative; }
+
+  /* ---- chat ---- */
+  .chat {
+    flex: 1; overflow-y: auto; padding: 22px 22px 8px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .chat::-webkit-scrollbar { width: 8px; }
+  .chat::-webkit-scrollbar-thumb { background: var(--accent-soft); border-radius: 8px; }
+
+  .msg {
+    max-width: 76%; padding: 12px 15px; line-height: 1.5; font-size: 14px;
+    border-radius: 14px; white-space: pre-wrap; word-wrap: break-word;
+    user-select: text; animation: rise .28s ease both;
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
+
+  .msg.user {
+    align-self: flex-end;
+    background: linear-gradient(180deg, #15384c, var(--user));
+    border: 1px solid rgba(34,211,238,0.25);
+    border-bottom-right-radius: 4px;
+  }
+  .msg.serene {
+    align-self: flex-start;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--accent);
+    border-bottom-left-radius: 4px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 0 24px rgba(34,211,238,0.05);
+  }
+  .who {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 2px;
+    color: var(--text-dim); margin-bottom: 5px; text-transform: uppercase;
+  }
+
+  .thinking { align-self: flex-start; display: flex; gap: 5px; padding: 14px 16px; }
+  .thinking i {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+    box-shadow: 0 0 8px var(--accent-glow); animation: blink 1.2s infinite;
+  }
+  .thinking i:nth-child(2) { animation-delay: .2s; }
+  .thinking i:nth-child(3) { animation-delay: .4s; }
+  @keyframes blink { 0%,100% { opacity: .25; } 50% { opacity: 1; } }
+
+  /* ---- composer ---- */
+  .composer {
+    display: flex; gap: 10px; align-items: flex-end;
+    padding: 14px 18px 18px; border-top: 1px solid var(--line);
+  }
+  .composer textarea {
+    flex: 1; resize: none; max-height: 130px;
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px 14px; font-family: var(--font); font-size: 14px;
+    outline: none; user-select: text; transition: border-color .15s, box-shadow .15s;
+  }
+  .composer textarea:focus {
+    border-color: var(--accent-glow);
+    box-shadow: 0 0 0 1px var(--accent-soft), 0 0 18px rgba(34,211,238,0.08);
+  }
+  .composer textarea::placeholder { color: var(--text-dim); }
+
+  .send {
+    height: 44px; padding: 0 20px; cursor: pointer;
+    font-family: var(--mono); font-size: 12px; letter-spacing: 2px;
+    color: #06121a; font-weight: 700;
+    background: linear-gradient(180deg, #6ff0ff, var(--accent));
+    border: none; border-radius: 12px;
+    box-shadow: 0 0 18px var(--accent-glow); transition: .15s;
+  }
+  .send:hover { filter: brightness(1.1); box-shadow: 0 0 26px var(--accent-glow); }
+  .send:disabled { opacity: .4; cursor: default; box-shadow: none; }
+
+  /* ---- reactor lock screen ---- */
+  #lock {
+    position: fixed; inset: 0; z-index: 900;
+    display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(900px 500px at 50% 42%, rgba(34,211,238,0.07), transparent 60%),
+      linear-gradient(160deg, var(--bg), var(--bg2));
+    transition: opacity .5s ease;
+  }
+  #lock.hidden { opacity: 0; pointer-events: none; }
+  .lock-controls { position: absolute; top: 12px; right: 14px; display: flex; gap: 8px;
+                   -webkit-app-region: no-drag; }
+  .reactor { position: relative; width: 240px; height: 240px; display: grid; place-items: center; }
+  .reactor .rings { position: absolute; inset: 0; width: 100%; height: 100%;
+                    filter: drop-shadow(0 0 8px var(--accent-glow)); }
+  .spin-slow { transform-origin: 120px 120px; animation: spin 16s linear infinite; }
+  .spin-rev  { transform-origin: 120px 120px; animation: spin 9s linear infinite reverse; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .core { position: relative; z-index: 2; display: flex; flex-direction: column;
+          align-items: center; gap: 9px; }
+  .core .lk { color: var(--accent); display: grid; place-items: center; }
+  #pw {
+    width: 108px; background: transparent; border: none; outline: none;
+    color: var(--accent); font-family: var(--mono); font-size: 22px;
+    letter-spacing: 8px; text-align: center; caret-color: var(--accent);
+  }
+  #pw::placeholder { color: rgba(34,211,238,0.3); }
+  .core .hint { font-family: var(--mono); font-size: 9px; letter-spacing: 2px;
+                color: var(--text-dim); }
+  #lock.error .reactor { animation: shake .42s; }
+  #lock.error #pw { color: #ff8a8a; }
+  #lock.error .rings { filter: drop-shadow(0 0 10px rgba(255,120,120,.6)); }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-9px); } 40% { transform: translateX(9px); }
+    60% { transform: translateX(-6px); } 80% { transform: translateX(6px); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="titlebar">
+    <div class="drag pywebview-drag-region">
+      <div class="orb"></div>
+      <div>
+        <div class="brand">SERENE</div>
+        <div class="status" id="status">ONLINE</div>
+      </div>
+    </div>
+    <div class="controls">
+      <select class="brain" id="brain" title="Active brain"></select>
+      <button class="winbtn mem on" id="mem" title="Memory: on (click for private chat)">🧠</button>
+      <button class="winbtn" id="min" title="Minimize">—</button>
+      <button class="winbtn x" id="close" title="Close">✕</button>
+    </div>
+  </div>
+
+  <div class="chat" id="chat"></div>
+
+  <div class="composer">
+    <textarea id="input" rows="1" placeholder="Talk to SERENE…"></textarea>
+    <button class="send" id="send">SEND</button>
+  </div>
+
+</div>
+
+<div id="lock">
+  <div class="lock-controls">
+    <button class="winbtn" id="lmin" title="Minimize">—</button>
+    <button class="winbtn x" id="lclose" title="Close">✕</button>
+  </div>
+  <div class="reactor" id="reactor">
+    <svg class="rings" viewBox="0 0 240 240">
+      <circle class="spin-slow" cx="120" cy="120" r="110" fill="none" stroke="#7c3aed" stroke-width="1.3" stroke-dasharray="3 7" opacity="0.8"/>
+      <circle cx="120" cy="120" r="88" fill="rgba(14,26,38,0.55)" stroke="#22d3ee" stroke-width="1.6"/>
+      <circle class="spin-rev" cx="120" cy="120" r="88" fill="none" stroke="#22d3ee" stroke-width="3" stroke-dasharray="52 250"/>
+      <circle cx="120" cy="120" r="64" fill="rgba(7,11,18,0.55)" stroke="rgba(34,211,238,0.25)" stroke-width="1"/>
+    </svg>
+    <div class="core">
+      <span class="lk"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11 V8 a4 4 0 0 1 8 0 v3"/></svg></span>
+      <input id="pw" type="password" maxlength="12" inputmode="numeric" placeholder="••••" autocomplete="off"/>
+      <div class="hint">ENTER TO UNLOCK</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const chat   = document.getElementById('chat');
+  const input  = document.getElementById('input');
+  const sendBtn= document.getElementById('send');
+  const brainSel = document.getElementById('brain');
+  const memBtn = document.getElementById('mem');
+  const status = document.getElementById('status');
+  let memOn = true;
+
+  // wait until pywebview has injected its api
+  function ready(fn){
+    if (window.pywebview && window.pywebview.api) fn();
+    else window.addEventListener('pywebviewready', fn);
+  }
+
+  function addMsg(role, text){
+    const wrap = document.createElement('div');
+    wrap.className = 'msg ' + (role === 'user' ? 'user' : 'serene');
+    const who = document.createElement('div');
+    who.className = 'who';
+    who.textContent = role === 'user' ? 'YOU' : 'SERENE';
+    const body = document.createElement('div');
+    body.textContent = text;
+    wrap.appendChild(who); wrap.appendChild(body);
+    chat.appendChild(wrap);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  let thinkingEl = null;
+  function showThinking(){
+    thinkingEl = document.createElement('div');
+    thinkingEl.className = 'thinking';
+    thinkingEl.innerHTML = '<i></i><i></i><i></i>';
+    chat.appendChild(thinkingEl);
+    chat.scrollTop = chat.scrollHeight;
+  }
+  function hideThinking(){ if (thinkingEl){ thinkingEl.remove(); thinkingEl = null; } }
+
+  async function send(){
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = ''; input.style.height = 'auto';
+    addMsg('user', text);
+    sendBtn.disabled = true; status.textContent = 'THINKING…';
+    showThinking();
+    try {
+      const reply = await window.pywebview.api.send(text);
+      hideThinking();
+      addMsg('serene', reply);
+    } catch (e) {
+      hideThinking();
+      addMsg('serene', '[error] ' + e);
+    }
+    sendBtn.disabled = false; status.textContent = memOn ? 'ONLINE' : 'PRIVATE';
+    input.focus();
+  }
+
+  // enter to send, shift+enter for newline; auto-grow
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); send(); }
+  });
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 130) + 'px';
+  });
+  sendBtn.addEventListener('click', send);
+
+  document.getElementById('min').addEventListener('click', () => window.pywebview.api.minimize());
+  document.getElementById('close').addEventListener('click', async () => {
+    status.textContent = 'SAVING…';
+    try { await window.pywebview.api.end(); } catch(e){}
+    window.pywebview.api.close();
+  });
+
+  brainSel.addEventListener('change', async () => {
+    const now = await window.pywebview.api.switch(brainSel.value);
+    addMsg('serene', `(brain switched to ${now})`);
+  });
+
+  function paintMemory(){
+    memBtn.classList.toggle('on', memOn);
+    memBtn.classList.toggle('off', !memOn);
+    memBtn.title = memOn ? 'Memory: on (click for private chat)'
+                         : 'Memory: off — this chat won\'t be saved';
+    if (status.textContent === 'ONLINE' || status.textContent === 'PRIVATE')
+      status.textContent = memOn ? 'ONLINE' : 'PRIVATE';
+  }
+  memBtn.addEventListener('click', async () => {
+    memOn = await window.pywebview.api.set_memory(!memOn);
+    paintMemory();
+    addMsg('serene', memOn ? "(memory on — I'll remember this)"
+                           : "(memory off — this chat won't be saved)");
+  });
+
+  // ---- reactor lock ----
+  const lock = document.getElementById('lock');
+  const pw = document.getElementById('pw');
+  async function tryUnlock(){
+    const ok = await window.pywebview.api.unlock(pw.value);
+    if (ok){
+      lock.classList.add('hidden');
+      setTimeout(() => { lock.style.display = 'none'; input.focus(); }, 500);
+    } else {
+      lock.classList.add('error'); pw.value = '';
+      setTimeout(() => lock.classList.remove('error'), 460);
+    }
+  }
+  pw.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); tryUnlock(); } });
+  document.getElementById('lmin').addEventListener('click', () => window.pywebview.api.minimize());
+  document.getElementById('lclose').addEventListener('click', () => window.pywebview.api.close());
+
+  ready(async () => {
+    const brains = await window.pywebview.api.list_brains();
+    const current = await window.pywebview.api.current_brain();
+    brainSel.innerHTML = brains.map(b =>
+      `<option value="${b}" ${b===current?'selected':''}>${b.toUpperCase()}</option>`).join('');
+    memOn = await window.pywebview.api.memory_on();
+    paintMemory();
+    addMsg('serene', "Hi, I'm here. What can I do for you?");
+
+    // show the reactor lock if a password is set; otherwise go straight in
+    const locked = await window.pywebview.api.lock_enabled();
+    if (locked) {
+      pw.focus();
+    } else {
+      lock.classList.add('hidden');
+      lock.style.display = 'none';
+      input.focus();
+    }
+  });
+</script>
+</body>
+</html>
