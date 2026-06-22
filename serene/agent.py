@@ -17,13 +17,13 @@ model can't do this reliably.
 """
 from groq import Groq
 
-from serene.config import GROQ_API_KEY
+from serene.config import GROQ_API_KEY, AGENT_MODEL
 from serene.tools.registry import TOOL_SCHEMAS, call_tool
 
 _client = Groq(api_key=GROQ_API_KEY)
 # gpt-oss uses proper structured function-calling (not Llama's text-tag format
 # that Groq's parser sometimes rejects), so it's far more reliable for tools.
-_MODEL = "openai/gpt-oss-20b"
+_MODEL = AGENT_MODEL
 _MAX_STEPS = 5         # safety cap so a confused model can't loop forever
 _TOOL_RETRIES = 2      # retry intermittent malformed tool calls before giving up
 

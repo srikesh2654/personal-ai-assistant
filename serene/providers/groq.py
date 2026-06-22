@@ -1,9 +1,9 @@
 from groq import Groq
-from serene.config import GROQ_API_KEY
+from serene.config import GROQ_API_KEY, GROQ_MODEL
 
 
 class GroqProvider:
-    def __init__(self, model="llama-3.3-70b-versatile"):
+    def __init__(self, model=GROQ_MODEL):
         self.model = model
         self.client = Groq(api_key=GROQ_API_KEY)
 
