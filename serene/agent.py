@@ -69,7 +69,9 @@ def chat_with_tools(messages):
             return msg.content
 
         # The model wants to use one or more tools. We must add ITS message
-        # (the request) to the history, then add a result for each call.
+        # (the request) to the history, then add a result for each call —
+        # a tool result whose tool_call_id has no matching assistant message
+        # is a validation error.
         messages.append({
             "role": "assistant",
             "content": msg.content or "",
